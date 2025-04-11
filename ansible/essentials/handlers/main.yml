@@ -1,0 +1,6 @@
+- name: restart systemd-networkd
+  ansible.builtin.systemd:
+    name: systemd-networkd
+    state: restarted
+  when: netdev_config.changed or network_config.changed # Trigger the handler as well when either of the following steps have a status of "changed" after running ansible-playbook
+  become: yes

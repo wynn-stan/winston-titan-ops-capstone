@@ -1,0 +1,9 @@
+tls:
+  certificates:
+    - certFile: /certs/local.test+5.pem
+      keyFile: /certs/local.test+5-key.pm
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/local.test+5.pem
+        keyFile: /certs/local.test+5-key.pem

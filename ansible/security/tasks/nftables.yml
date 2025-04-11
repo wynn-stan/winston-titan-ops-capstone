@@ -1,0 +1,20 @@
+- name: ensure nftables is started and enabled at boot
+  ansible.builtin.systemd:
+    name: nftables
+    state: started
+    enabled: yes
+  become: yes
+
+- name: nftables.conf
+  ansible.builtin.copy:
+    src: nftables.conf
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: '644'
+    backup: yes
+  notify:
+    - restart nftables
+    - restart docker # The above update overwrites everything in the nftables, so after making changes, restart docker so docker can re-append it's nftables rules
+  become: yes
+# To confirm - run nft list ruleset, should be the same as files/nftables.conf

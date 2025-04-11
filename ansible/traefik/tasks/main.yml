@@ -1,0 +1,26 @@
+- name: Create services directory
+  ansible.builtin.file:
+    path: /home/ubuntu/services
+    state: directory
+    mode: '755'
+  become: yes
+
+- name: Copy Traefik service folder
+  ansible.builtin.copy:
+    src: traefik
+    dest: /home/ubuntu/services
+    owner: ubuntu
+    group: ubuntu
+    mode: '755'
+  become: yes
+
+- name: Create Docker network 'web'
+  community.general.docker_network:
+    name: web
+    state: present
+  become: yes
+
+- name: Restart Traefik container
+  shell: |
+    cd /home/ubuntu/services/traefik && docker compose down && docker compose up -d
+  become: yes

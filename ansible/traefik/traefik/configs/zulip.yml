@@ -1,0 +1,27 @@
+http:
+  routers:
+    zulip:
+      rule: Host(`zulip.local.test`)
+      tls: true
+      service: zulip
+      entryPoints:
+        - https
+      middlewares:
+        - zulip-allowlist
+
+  middlewares:
+    zulip-allowlist:
+      ipallowlist:
+        sourceRange:
+          - '0.0.0.0/0'
+
+  services:
+    zulip:
+      loadBalancer:
+        servers:
+          - url: https://10.100.100.11
+        serversTransport: zulip-transport
+
+  serversTransports:
+    zulip-transport:
+      insecureSkipVerify: true

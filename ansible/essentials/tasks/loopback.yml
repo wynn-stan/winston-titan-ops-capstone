@@ -1,0 +1,13 @@
+# Adding another loopback interface to our network interfaces
+
+- name: Add loopback address
+  ansible.builtin.copy:
+    src: files/11-lo.network
+    dest: /etc/systemd/network/11-lo.network
+    owner: root
+    group: root
+    mode: 644
+  notify: restart systemd-networkd
+  become: yes
+
+  # To Confirm - in vm, ls ~/etc/systemd/network, should have 11-lo.network file

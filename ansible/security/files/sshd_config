@@ -1,0 +1,13 @@
+Include /etc/ssh/sshd_config.d/*.conf
+Port 55522
+Port 22
+PermitRootLogin prohibit-password
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication no
+UsePAM yes
+X11Forwarding yes
+X11UseLocalhost no
+AcceptEnv LANG LC_*
+PrintMotd no
+ClientAliveInterval 60
+Subsystem sftp /usr/lib/openssh/sftp-server

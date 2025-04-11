@@ -1,0 +1,13 @@
+# Add some configurations to the vm's kernel
+
+- name: 99-sysctl.conf
+  copy:
+    src: files/99-sysctl.conf
+    dest: /etc/sysctl.d/99-sysctl.conf
+    owner: root
+    group: root
+    mode: '644'
+    backup: yes # What does this do?
+  notify: reload sysctl
+  become: yes
+# To confirm, in vm, run sysctl -a | grep fs, a lot of stuff but you should see fs.inotify.max_user_watches = 204800

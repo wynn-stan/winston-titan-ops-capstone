@@ -1,0 +1,116 @@
+# Creating a bridge interface for our containers to communicate on
+
+- name: Backup current network configuration
+  copy:
+    src: /etc/systemd/network/
+    dest: /etc/systemd/network.backup/
+    remote_src: yes
+  ignore_errors: yes # Why?
+  become: yes
+
+# Pre-flight checks
+- name: Check existing network connectivity
+  shell: |
+    ping -c 1 8.8.8.8
+  register: connectivity_check # What does register do? Can refernced in another steps 'when'. Eg when connectivity_check.changed or .ok or .skipped
+  ignore_errors: yes
+
+# Check that our primary interface (specificied in vars/main.yml) is up and working
+- name: Verify primary interface status
+  shell: |
+    ip link show {{ primary_interface }} | grep "state UP"
+  register: interface_check
+  ignore_errors: yes
+
+# Check for IP Conflicts, the bridge ip we specified(vars/main.yml) does not conflict with other ips on the bridge
+- name: Check for IP conflicts
+  shell: |
+    ip addr | grep -w "{{ bridge_ip | regex_replace('/.*$', '') }}" | grep -v "{{ bridge_name }}" || true
+  register: ip_conflict
+  changed_when: false # What does this do?
+
+- name: Fail if IP conflict found
+  fail:
+    msg: 'IP conflict detected for {{ bridge_ip }}'
+  when: ip_conflict.stdout != ""
+
+# At this point we assume everything is fine
+# Adding the actual network interface
+- name: Deploy bridge netdev configuration
+  copy:
+    src: files/br0.netdev
+    dest: /etc/systemd/network/{{ bridge_name }}.netdev
+    mode: '644'
+  notify: restart systemd-networkd
+  become: yes
+  register: netdev_config
+  # To confirm - ip link show ,should have another interface "br0"
+
+# Adding an ip for reference inside the br0 interface
+- name: Deploy bridge network configuration
+  copy:
+    src: files/br0.network
+    dest: /etc/systemd/network/{{ bridge_name }}.network
+    mode: '644'
+  notify: restart systemd-networkd
+  become: yes
+  register: network_config
+# To confirm - ip addr should show "{{ bridge_ip }}" under "br0"
+
+- name: Restart systemd-networkd immediately
+  systemd:
+    name: systemd-networkd
+    state: restarted
+  when: netdev_config.changed or network_config.changed
+  become: yes
+
+- name: Wait for systemd-networkd to settle
+  pause:
+    seconds: 5
+  when: netdev_config.changed or network_config.changed
+
+- name: Wait for bridge interface to show
+  shell: |
+    timeout 30 bash -c "until ip link show {{ bridge_name }}; do sleep; done"
+  register: bridge_wait
+  changed_when: false
+  ignore_errors: yes
+
+- name: Verify bridge configuration
+  shell: |
+    ip addr show {{ bridge_name }}
+  register: bridge_config
+  changed_when: false
+  when: bridge_wait is success
+
+- name: Verify network connectivity still works
+  shell: |
+    ping -c 1 8.8.8.8
+  register: final_connectivity
+  ignore_errors: yes
+
+- name: Rollback on failure
+  block:
+    - name: Remove bridge configurations
+      file:
+        path: '/etc/systemd/network/{{ item }}' # item? with_items below
+        state: absent
+      with_items:
+        - '{{ bridge_name }}.netdev'
+        - '{{ bridge_name }}.network'
+      become: yes
+
+    - name: Restore backup configuration
+      copy:
+        src: /etc/systemd/network.backup/
+        dest: /etc/systemd/network/
+        remote_src: yes
+      become: yes
+      when: bridge_wait is failed or final_connectivity is failed
+
+    - name: Restart networking
+      systemd:
+        name: systemd-networkd
+        state: restarted
+      become: yes
+  when: bridge_wait is failed or final_connectivity is failed

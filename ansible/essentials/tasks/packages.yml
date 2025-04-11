@@ -1,0 +1,60 @@
+- name: install packages
+  ansible.builtin.apt:
+    update_cache: yes
+    name:
+      - build-essential
+      - bat
+      - fd-find
+      - fzf
+      - git
+      - htop
+      - iotop
+      - lm-sensors
+      - man-db
+      - manpages
+      - p7zip-full
+      - plocate
+      - ripgrep
+      - smartmontools
+      - sudo
+      - zsh
+    state: present
+  become: yes
+# To Confirm - ssh into vm and try running an installed package
+
+# Time on host machine aligns with time on vm
+- name: ensure plocate updatedb timer is started and enabled on system start
+  ansible.builtin.systemd:
+    name: plocate-updatedb.timer
+    enabled: yes
+    state: started
+  become: yes
+
+# To confirm - ssh into vm and run "systemctl status plocate-updatedb.timer"
+
+- name: symlink fd to fdfind
+  ansible.builtin.file:
+    src: /usr/bin/fdfind
+    dest: /usr/bin/fd
+    state: link
+  become: yes
+
+- name: create scripts directory
+  ansible.builtin.file:
+    path: /home/ubuntu/scripts
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '755'
+  become: yes
+# To confirm - ssh into vm and run "ls ~/", scripts folder should be there
+
+# Updating our sources.list file, fastest mirrors (Optional and manual)
+- name: update apt mirrors script
+  ansible.builtin.copy:
+    src: files/apt-select-mirror.sh
+    dest: /home/ubuntu/scripts/apt-select-mirror.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '700'
+  become: yes

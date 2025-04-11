@@ -1,0 +1,54 @@
+services:
+  traefik:
+    container_name: ${TRAEFIK_CONTAINER_NAME}
+    hostname: ${TRAEFIK_HOSTNAME}
+    image: ${TRAEFIK_IMAGE}:${TRAEFIK_VERSION}
+    restart: unless-stopped
+    networks:
+      - web
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - './configs/:/configs/'
+      - './certs:/certs:ro'
+    command:
+      - '--log.level=INFO'
+      - '--accessLog=true'
+      - '--serverstransport.insecureskipverify=true'
+
+      - '--api=true'
+      - '--api.dashboard=true'
+      - '--entrypoints.http.address=:80'
+      - '--entrypoints.https.address=:443'
+
+      - '--providers.docker=true'
+      - '--providers.docker.network=web'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.file.directory=/configs/'
+      - '--providers.file.watch=true'
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
+    labels:
+      - 'traefik.enable=true'
+
+      - 'traefik.http.routers.${SERVICE}.rule=Host(`${TRAEFIK_HOSTNAME}`)'
+      - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+      - 'traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true'
+      - 'traefik.http.routers.redirects.rule=hostregexp(`.+`)'
+      - 'traefik.http.routers.redirects.entrypoints=http'
+      - 'traefik.http.routers.redirects.middlewares=redirect-to-https'
+
+      - 'traefik.http.routers.${SERVICE}.tls=true'
+      - 'traefik.http.routers.${SERVICE}.service=api@internal'
+      - 'traefik.http.routers.${SERVICE}.middlewares=${SERVICE}-allowlist,${SERVICE}-auth'
+      - 'traefik.http.middlewares.${SERVICE}-allowlist.ipallowlist.sourcerange=${ip_allowlist}'
+      - 'traefik.http.middlewares.${SERVICE}-auth.basicauth.users=${TRAEFIK_DASHBOARD_USERNAME}:${TRAEFIK_DASHBOARD_PASSWORD}'
+
+networks:
+  web:
+    external: true

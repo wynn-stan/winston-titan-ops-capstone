@@ -1,0 +1,18 @@
+# Purpose: A cron to run scripts eg. Running backups at given times
+
+- name: install cron
+  ansible.builtin.apt:
+    update_cache: yes
+    name:
+      - cron
+    state: present
+  become: yes
+
+- name: Ensure cron service is started and enabled on system startup
+  ansible.builtin.systemd:
+    name: cron
+    enabled: yes
+    state: started
+  become: yes
+# To Confirm -> inside vm, run systemctl status cron.service
+

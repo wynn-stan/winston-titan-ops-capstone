@@ -1,0 +1,8 @@
+# name of bridge interface to create
+bridge_name: br0
+
+# name of bridge ip to create
+bridge_ip: 10.100.100.1/24
+
+# name of network interface the vm is connected to the host with
+primary_interface: ens5
