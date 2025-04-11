@@ -60,3 +60,12 @@ For another project ([Task Tracker Repo](https://github.com/wynn-stan/task-track
 
 - This is a basic setup, mostly meant to demonstrate provisioning, configuration, and deployment with minimal tools.
 - Could be improved with monitoring/logging, better security, server backups, and more.
+
+---
+
+## 📸 Preview
+
+![Github Actions](./media/github-actions.png 'Github Actions')
+![Traefik Overview](./media/traefik-overview.png 'Traefik Overview')
+![Traefik Details](./media/traefik-details.png 'Traefik Details')
+![Task Tracker](./media/task-tracker.png 'Task Tracker')
