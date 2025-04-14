@@ -6,3 +6,4 @@
     - kerneltweaks
     - docker
     - traefik
+    - monitoring

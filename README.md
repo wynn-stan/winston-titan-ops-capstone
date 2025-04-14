@@ -20,14 +20,15 @@ This project creates a DevOps setup using **AWS EC2**, **Ansible**, **Docker**, 
 
    - An Ansible playbook was used to automate the configuration of the EC2 instance, consisting of the following roles:
 
-   | Role         | Description                                                                           |
-   | ------------ | ------------------------------------------------------------------------------------- |
-   | `hostname`   | Sets a custom hostname (vps) on the VM                                                |
-   | `essentials` | Installs base packages, enables services on boot, and sets up a bridge network        |
-   | `security`   | Applies security configurations including `nftables` rules and allowed SSH ports      |
-   | `kernel`     | Applies kernel tweaks (e.g., enables IP forwarding)                                   |
-   | `docker`     | Installs and configures Docker                                                        |
-   | `traefik`    | Installs and sets up Traefik as a load balancer and reverse proxy for Docker services |
+   | Role         | Description                                                                                             |
+   | ------------ | ------------------------------------------------------------------------------------------------------- |
+   | `hostname`   | Sets a custom hostname (vps) on the VM                                                                  |
+   | `essentials` | Installs base packages, enables services on boot, and sets up a bridge network                          |
+   | `security`   | Applies security configurations including `nftables` rules and allowed SSH ports                        |
+   | `kernel`     | Applies kernel tweaks (e.g., enables IP forwarding)                                                     |
+   | `docker`     | Installs and configures Docker                                                                          |
+   | `traefik`    | Installs and sets up Traefik as a load balancer and reverse proxy for Docker services                   |
+   | `monitoring` | Installs and sets up Grafana, Prometheus and Alertmanager to monitor system and application performance |
 
 4. **Local DNS Mapping**
    - Added the following entry to the local `/etc/hosts` file to map the custom domain to the VM:

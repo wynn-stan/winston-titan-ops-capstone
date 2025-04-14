@@ -1,0 +1,38 @@
+groups:
+  - name: basic_alerts
+    rules:
+      - alert: HighCPULoad
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High CPU load'
+          description: 'CPU load is > 80% on {{ $labels.instance }}'
+
+      - alert: HighMemoryLoad
+        expr: (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) / node_memory_MemTotal_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High memory load'
+          description: 'Memory load is > 80% on {{ $labels.instance }}'
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High disk usage'
+          description: 'Disk usage is > 80% on {{ $labels.instance }} mount {{ $labels.mountpoint }}'
+
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name!=""})
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Container down'
+          description: 'Container {{ $labels.name }} on {{ $labels.instance }} is down'

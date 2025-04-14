@@ -1,0 +1,63 @@
+- name: Create monitoring stack directory
+  ansible.builtin.file:
+    path: '{{ monitoring_dir }}'
+    state: directory
+    mode: '755'
+  become: yes
+
+- name: Create Subdirectories for configurations
+  ansible.builtin.file:
+    path: '{{ monitoring_dir }}/{{ item }}'
+    state: directory
+    mode: '755'
+  with_items:
+    - 'prometheus'
+    - 'alertmanager'
+    - 'grafana/provisioning/datasources'
+    - 'grafana/provisioning/dashboards'
+  become: yes
+
+- name: Template docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: '{{ monitoring_dir }}/docker-compose.yml'
+    mode: '644'
+  become: yes
+  notify: restart monitoring
+
+- name: Template Prometheus configuration
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: '{{ monitoring_dir }}/prometheus/prometheus.yml'
+    mode: '644'
+  become: yes
+  notify: restart monitoring
+
+- name: Template Alertmanager configuration
+  ansible.builtin.template:
+    src: alertmanager.config.yml.j2
+    dest: '{{ monitoring_dir }}/alertmanager/config.yml'
+    mode: '644'
+  become: yes
+  notify: restart monitoring
+
+- name: Template Grafana datasource
+  ansible.builtin.template:
+    src: grafana_datasources.yml.j2
+    dest: '{{ monitoring_dir }}/grafana/provisioning/datasources/prometheus.yml'
+    mode: '644'
+  become: yes
+  notify: restart monitoring
+
+- name: Deploy monitoring with docker-compose
+  shell:
+    cmd: cd {{ monitoring_dir }} && docker compose up -d
+    creates: '{{ monitoring_dir }}/.deployed'
+  become: yes
+
+- name: Mark as deployed
+  file:
+    path: '{{ monitoring_dir }}/.deployed'
+    state: touch
+    mode: '644'
+  become: yes
